@@ -54,6 +54,10 @@
       color: red;
       margin-top: 20px;
     }
+    .status-message {
+      margin-top: 10px;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
@@ -70,10 +74,13 @@
     </div>
   </div>
   <div id="error" class="error"></div>
+  <div id="status" class="status-message"></div>
 
   <script>
     const API_URL = 'https://script.google.com/macros/s/AKfycbxnF93-jDoEcCr8ysciZpPiQ6Zp2_D9HjicfmTgYn3hB7bK_EHid6lQ8i0ANS5_7MW3/exec';
     const UPDATE_URL = 'https://script.google.com/macros/s/AKfycbxnF93-jDoEcCr8ysciZpPiQ6Zp2_D9HjicfmTgYn3hB7bK_EHid6lQ8i0ANS5_7MW3/exec?action=update';
+
+    const statusMessage = document.getElementById("status");
 
     const columns = ['Disponible', 'En_casting', 'Asignado'];
 
@@ -95,10 +102,19 @@
           })
           .then(res => res.json())
           .then(response => {
-            console.log('Actualización exitosa:', response);
+            if (response.success) {
+              statusMessage.style.color = 'green';
+              statusMessage.textContent = `Estado de "${nombre}" actualizado a "${nuevoEstado}".`;
+            } else {
+              statusMessage.style.color = 'red';
+              statusMessage.textContent = `No se pudo actualizar el estado de "${nombre}". ${response.message || ''}`;
+            }
+            console.log('Actualización:', response);
           })
           .catch(error => {
             console.error('Error al actualizar:', error);
+            statusMessage.style.color = 'red';
+            statusMessage.textContent = `Error al actualizar el estado de "${nombre}".`;
           });
         }
       });
