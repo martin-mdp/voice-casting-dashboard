@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Voice Casting Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f4f4f4;
+      margin: 0;
+      padding: 20px;
+    }
+    h2 {
+      margin-top: 0;
+    }
+    .board {
+      display: flex;
+      gap: 20px;
+    }
+    .column {
+      background: white;
+      border-radius: 8px;
+      padding: 10px;
+      width: 300px;
+      min-height: 400px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    }
+    .column h3 {
+      text-align: center;
+    }
+    .card {
+      background: #fefefe;
+      border-radius: 8px;
+      padding: 16px;
+      margin: 12px 0;
+      cursor: move;
+      border: 2px solid #999;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+      font-size: 16px;
+    }
+    .card strong {
+      font-size: 18px;
+      display: block;
+      margin-bottom: 6px;
+    }
+    .card audio, .card a {
+      display: block;
+      width: 100%;
+      margin-top: 10px;
+    }
+    .error {
+      color: red;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h2>Voice Casting Dashboard</h2>
+  <div class="board">
+    <div class="column" id="Disponible">
+      <h3>Disponible</h3>
+    </div>
+    <div class="column" id="En_casting">
+      <h3>En Casting</h3>
+    </div>
+    <div class="column" id="Asignado">
+      <h3>Asignado</h3>
+    </div>
+  </div>
+  <div id="error" class="error"></div>
+
+  <script>
+    const columns = ['Disponible', 'En_casting', 'Asignado'];
+    columns.forEach(id => {
+      new Sortable(document.getElementById(id), {
+        group: 'shared',
+        animation: 150,
+        ghostClass: 'dragging'
+      });
+    });
+
+    const API_URL = 'https://script.google.com/macros/s/AKfycbxnF93-jDoEcCr8ysciZpPiQ6Zp2_D9HjicfmTgYn3hB7bK_EHid6lQ8i0ANS5_7MW3/exec';
+
+    fetch(API_URL)
+      .then(res => res.json())
+      .then(data => {
+        if (!Array.isArray(data)) {
+          document.getElementById('error').textContent = 'Error: La respuesta de la API no es válida.';
+          return;
+        }
+
+        data.forEach(actor => {
+          console.log(actor);
+
+          const nombre = actor["Nombre"] || "(Sin nombre)";
+          const idioma = actor["Idioma"] || "(Sin idioma)";
+          const genero = actor["Género"] || actor["Genero"] || "(Sin género)";
+          const audioUrl = actor["Link de audio demo"] || "";
+          let estado = actor["Estado"] || "Disponible";
+          estado = estado.replace(/\s+/g, '_');
+
+          const card = document.createElement('div');
+          card.className = 'card';
+          card.setAttribute('data-nombre', nombre);
+
+          let content = `<strong>${nombre}</strong>`;
+          content += `${idioma}, ${genero}`;
+          if (audioUrl) {
+            content += `<a href="${audioUrl}" target="_blank">Escuchar demo</a>`;
+          }
+
+          card.innerHTML = content;
+
+          const column = document.getElementById(estado);
+          if (column) {
+            column.appendChild(card);
+          } else {
+            console.warn(`No se encontró la columna para estado: ${estado}`);
+            document.getElementById('Disponible').appendChild(card);
+          }
+        });
+      })
+      .catch(error => {
+        console.error('Error al cargar los datos:', error);
+        document.getElementById('error').textContent = 'Error al cargar los datos. Ver consola para más información.';
+      });
+  </script>
+</body>
+</html>
